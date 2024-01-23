@@ -7,7 +7,7 @@
 # Passing the -n flag will search by first or last name, ex: dkf -n tom
 #   listing all records which match that name (even if they are not twitch users).
 # pass -ns for case sensitive name search (e.g. does partial matches, does not capitalize) ex: dkf -ns icha
-# pass -r for a rank search, ex: dkf -r 1-10 (top ten, a range), or dkf -r 2 4 6 8 (a list) [not implemented yet]
+# pass -r for a rank search, ex: dkf -r 1-10 (top ten, a range), or dkf -r 2 4 6 8 (a list)
 # Delete dfk.html to update the list.
 
 use feature 'say';
