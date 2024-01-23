@@ -1,10 +1,14 @@
 #!/usr/bin/perl
 ## dkf - Donkey Kong Forum High Score Scraper
 ## Copyright Jan 2024, David Ferrone, RI, USA
-## This script takes a given username (or part of one) as input and outputs that users donkey kong forum record. (i.e. You provide a twitch username and it tells you their real name, rank, and high score.)
+## This script takes a given username (or part of one) as input and outputs that users donkey kong forum record.
+## (i.e. You provide a twitch username and it tells you their real name, rank, and high score.)
 # Default mode is to search by twitch username. ex: dkf serph
-# Passing the -n flag will search by first or last name instead, listing all records which match that name (even if they are not twitch users). ex: dkf -n tom
-# Delete dfk.html when you want to update the list.
+# Passing the -n flag will search by first or last name, ex: dkf -n tom
+#   listing all records which match that name (even if they are not twitch users).
+# pass -ns for case sensitive name search (e.g. does partial matches, does not capitalize) ex: dkf -ns icha
+# pass -r for a rank search, ex: dkf -r 1-10 (top ten, a range), or dkf -r 2 4 6 8 (a list) [not implemented yet]
+# Delete dfk.html to update the list.
 
 use feature 'say';
 
@@ -12,14 +16,15 @@ use feature 'say';
 my $addr = "https://donkeykongforum.net/index.php?topic=366.0";
 system "curl $addr > dkf.html" unless (-e "dkf.html");
 
-unless ($ARGV[0] eq "-n") {
+unless ($ARGV[0] =~ /-/) { 
+    # Search by twitch username
     foreach my $keyword (@ARGV) {
 	# Search for keyword, and then grab data between the tags <tr> and </tr>
 	open my $file, "<", "dkf.html" or die "no html file $!";
 	my $line;		# a gigantic line of html
 	foreach my $l (<$file>) {
 	    chomp $l;
-	    $line = $l if ($l =~ /\/\w*$keyword/i); # looking for twitch links starting with the keyword
+	    $line = $l if ($l =~ /\/\w*$keyword/i);
 	    last if $line;
 	}
 	close $file;
@@ -27,41 +32,105 @@ unless ($ARGV[0] eq "-n") {
 	proc_rec($line, $b, 0);
     }
 } else {
-    my @names = @ARGV;
-    shift @names;
-    for my $given_name (@names) {
-	my $cnt = 0; # used to avoid printing the top 12 at the bottom, which repeats records.
-	open my $file, "<", "dkf.html" or die "no html file $!";
-	foreach my $l (<$file>) {
-	    chomp $l;
-	    if ($l =~ /$given_name/i) {
-		my $b = index($l, ucfirst(lc $given_name));
-		my $x = proc_rec($l, $b, $cnt);
-		if ($x > $cnt) {
-		    $cnt = $x;
-		}
-		my $flag = 1;
-		my $c = $b;
-		do {
-		    $c = index($l, ucfirst(lc $given_name), $c+1);
-		    if ($c != -1) {
-			my $x = proc_rec($l, $c, $cnt);
-			if ($x < $cnt) {
-			    $flag = 0;
-			} else {
-			    $cnt = $x;
-			}
-		    } else {
-			$flag = 0;
-		    }
-		} while ($flag);
+    if ($ARGV[0] eq "-r") {
+	# Search by rank
+	my @list = @ARGV;
+	shift @list;
+	if ($list[0] =~ /-/) { 	# range
+	    my @endpt = split("-", $list[0]);
+	    if (@endpt != 2) {
+		say "wrong range form";
+		exit;
+	    }
+	    shift @list;
+	    for my $i ($endpt[0] .. $endpt[1]) {
+		push @list, $i;
 	    }
 	}
-	close $file;
+	find_rank(@list);
+    } elsif ( ($ARGV[0] eq "-n") || ($ARGV[0] eq "-ns") ) {
+	# Search by first or last name (auto capitalizes)
+	my @names = @ARGV;
+	shift @names;
+	for my $given_name (@names) {
+	    my $cnt = 0; # used to avoid printing top 12 at the bottom, repeating records.
+	    open my $file, "<", "dkf.html" or die "no html file $!";
+	    foreach my $l (<$file>) {
+		chomp $l;
+		if ($l =~ /$given_name/i) {
+		    my $b = 0;
+		    if ($ARGV[0] eq "-ns") {
+			$b = index($l, $given_name);
+		    } else {
+			$b = index($l, ucfirst(lc $given_name));
+		    }
+		    my $x = proc_rec($l, $b, $cnt);
+		    if ($x > $cnt) {
+			$cnt = $x;
+		    }
+		    my $flag = 1;
+		    my $c = $b;
+		    do {
+			if ($ARGV[0] eq "-ns") {
+			    $c = index($l, $given_name, $c + 1);
+			} else {
+			    $c = index($l, ucfirst(lc $given_name), $c+1);
+			}
+			if ($c != -1) {
+			    my $x = proc_rec($l, $c, $cnt);
+			    if ($x < $cnt) {
+				$flag = 0;
+			    } else {
+				$cnt = $x;
+			    }
+			} else {
+			    $flag = 0;
+			}
+		    } while ($flag);
+		}
+	    }
+	    close $file;
+	}
+    } else {
+	say "I do not believe $ARGV[0] is an option...";
     }
 }
 
-sub proc_rec(){
+sub find_rank {
+    my @idnums = (6365, 12466, 13465, 13466, 32532, 39612, 45076);
+    my @ranks = @_;
+    foreach my $r (@ranks) {
+	my $pagenum = ($r % 100 == 0) ? $r/100 : (1 + int $r / 100);
+	my $key = 'id="msg_';
+	$key .= $idnums[$pagenum - 1] . '"';
+	my $line = "";
+	open my $file, "<", "dkf.html" or die "no html file $!";
+	foreach my $l (<$file>) {
+	    chomp $l;
+	    if ($l =~ /$key/i) {
+		$line = $l;
+		last;
+	    }
+	}
+	close $file;	    
+	my $b = index($line, "<tr>"); # header
+	my $steps = $r % 100 || 100;  # number of rows to skip
+	for (1 .. $steps) {
+	    $b = index($line, "<tr>", $b + 1);
+	}
+	proc_rec($line, $b + 1, 0);
+    }
+}
+# Find which page the rank is on.
+# line  960 is page 1 : id="msg_6365"
+# line 1011 is page 2 : msg_12466
+# line 1074 is page 3 : msg_13465
+# line 1137 is page 4 : msg_13466
+# line 1207 is page 5 : id="msg_32532"
+# line 1277 is page 6 : msg_39612
+# line 1347 is page 7 : msg_45076
+
+sub proc_rec {
     my $l = shift;
     my $b = shift;
     my $oldrank = shift;
@@ -91,7 +160,7 @@ sub proc_rec(){
 	}
 	my $post = index($chunk, $date);
 	my $piece = substr $chunk, $pre, $post - $pre;
-	$piece =~ />([éã\-\&\"\;\w\.,\ ]+)(?{$name = $^N})</;
+	$piece =~ />([@éã\-\&\"\;\w\.,\ ]+)(?{$name = $^N})</;
     } else {
 	$b = index($chunk, $user);
 	my $ind = index($chunk, ">", $b) + 1;
@@ -103,14 +172,3 @@ sub proc_rec(){
 	unless ($oldrank > $rank);
     return $rank;
 }
-
-# ??? Names that this regex will miss:
-# "jbeanne05"
-# "giro-X"
-# ":::Redsun:::" # can search for red, but : is not allowed
-# "nibbler 69@AIVA"
-# "S.BAZ"   # works if you search for Z, or S
-# "TheActivisionary"  # works if you search for act or the
-# "nii-san"
-# "wolfman0024"
-# "AGODZILLA@AIVA"

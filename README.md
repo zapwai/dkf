@@ -36,3 +36,33 @@ $ ./dkf -n tom
 393 130,400  Tom Collier 2008-02-27 
 608 1,700  Tom Nobel 2017-11-11
 ```
+Use the -ns flag for a case-sensitive name search.
+```
+./dkf -ns icha
+
+65 962,500 Y Michael Massaro 2021-08-26 dkmikey77
+88 892,900 Y Michael Kibbey 2022-08-05 kibbey
+98 877,300 Y Michael Edwards 2021-11-21 bonerforce75
+217 369,800  Michael Dietrich 2016-07-03 
+261 285,900  Michael Thelen 2008-05-16 
+367 158,100  Michael Williams 2008-10-08 
+414 116,300  Dwayne Richard 2005-10-30 
+527 45,400  Michael Collins 2010-01-01 
+538 40,900  Michael Bruhn 2011-11-26 
+553 29,800  Richard Ord 2008-05-09
+```
+Use the -r flag with a list or range to display ranks.
+```
+./dkf -r 6 8 10
+6 1,210,800 Y J.P. Buergers 2023-05-29 wflimusic
+8 1,206,800 Y Dean Saglio 2013-10-04 up2ng
+10 1,171,900 Y Phil Tudose 2021-06-03 tudose
+```
+```
+./dkf -r 1-5
+1 1,272,700 Y John McCurdy 2021-01-11 serphintizer
+2 1,271,100 Y Robbie Lakeman 2020-09-22 lakeman421
+3 1,235,500 Y Justin Elliott 2021-12-14 rayfinkel
+4 1,218,000 Y Wes Copeland 2016-05-05 wescopeland
+5 1,214,300 Y Matt Tecchio 2023-07-31 lyriell
+```
