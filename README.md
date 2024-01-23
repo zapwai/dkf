@@ -3,7 +3,7 @@ Donkey Kong Forum High Score Scraper
 
 Has this ever happened to you?
 You're playing Donkey Kong on Twitch, when some user whose name you forget says hello in chat.
-Sure, you could i) go to donkey kong forum, ii) pull up the high score list, iii) look at the source, iv) search for that user, and v) figure out their real name to say "Hello $name"
+Sure, you could i) go to the Donkey Kong forum, ii) pull up the high score list, iii) look at the source, iv) search for that user, and v) figure out their real name to say "Hello $name"
 
 There HAS to BE a BETTER WAY!
 
