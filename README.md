@@ -54,15 +54,24 @@ Use the -ns flag for a case-sensitive name search.
 Use the -r flag with a list or range to display ranks.
 ```
 ./dkf -r 6 8 10
+
 6 1,210,800 Y J.P. Buergers 2023-05-29 wflimusic
 8 1,206,800 Y Dean Saglio 2013-10-04 up2ng
 10 1,171,900 Y Phil Tudose 2021-06-03 tudose
 ```
 ```
 ./dkf -r 1-5
+
 1 1,272,700 Y John McCurdy 2021-01-11 serphintizer
 2 1,271,100 Y Robbie Lakeman 2020-09-22 lakeman421
 3 1,235,500 Y Justin Elliott 2021-12-14 rayfinkel
 4 1,218,000 Y Wes Copeland 2016-05-05 wescopeland
 5 1,214,300 Y Matt Tecchio 2023-07-31 lyriell
+```
+Use the -jr flag to use the Donkey Kong Jr. list instead.
+```
+./dkf -jr -n phil
+
+2 1,555,500 Y Phil Tudose 2021-12-18 tudose
+120 87,300  Phil Chapman 2005-02-08 
 ```
