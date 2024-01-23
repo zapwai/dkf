@@ -160,7 +160,7 @@ sub proc_rec {
 	}
 	my $post = index($chunk, $date);
 	my $piece = substr $chunk, $pre, $post - $pre;
-	$piece =~ />([@éã\-\&\"\;\w\.,\ ]+)(?{$name = $^N})</;
+	$piece =~ />([:*@éã\-\&\"\;\w\.,\ ]+)(?{$name = $^N})</;
     } else {
 	$b = index($chunk, $user);
 	my $ind = index($chunk, ">", $b) + 1;
