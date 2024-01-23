@@ -1,0 +1,116 @@
+#!/usr/bin/perl
+## dkf - Donkey Kong Forum High Score Scraper
+## Copyright Jan 2024, David Ferrone, RI, USA
+## This script takes a given username (or part of one) as input and outputs that users donkey kong forum record. (i.e. You provide a twitch username and it tells you their real name, rank, and high score.)
+# Default mode is to search by twitch username. ex: dkf serph
+# Passing the -n flag will search by first or last name instead, listing all records which match that name (even if they are not twitch users). ex: dkf -n tom
+# Delete dfk.html when you want to update the list.
+
+use feature 'say';
+
+# Grab the source html, unless you already have it.
+my $addr = "https://donkeykongforum.net/index.php?topic=366.0";
+system "curl $addr > dkf.html" unless (-e "dkf.html");
+
+unless ($ARGV[0] eq "-n") {
+    foreach my $keyword (@ARGV) {
+	# Search for keyword, and then grab data between the tags <tr> and </tr>
+	open my $file, "<", "dkf.html" or die "no html file $!";
+	my $line;		# a gigantic line of html
+	foreach my $l (<$file>) {
+	    chomp $l;
+	    $line = $l if ($l =~ /\/\w*$keyword/i); # looking for twitch links starting with the keyword
+	    last if $line;
+	}
+	close $file;
+	my $b = index($line, $keyword);
+	proc_rec($line, $b, 0);
+    }
+} else {
+    my @names = @ARGV;
+    shift @names;
+    for my $given_name (@names) {
+	my $cnt = 0; # used to avoid printing the top 12 at the bottom, which repeats records.
+	open my $file, "<", "dkf.html" or die "no html file $!";
+	foreach my $l (<$file>) {
+	    chomp $l;
+	    if ($l =~ /$given_name/i) {
+		my $b = index($l, ucfirst(lc $given_name));
+		my $x = proc_rec($l, $b, $cnt);
+		if ($x > $cnt) {
+		    $cnt = $x;
+		}
+		my $flag = 1;
+		my $c = $b;
+		do {
+		    $c = index($l, ucfirst(lc $given_name), $c+1);
+		    if ($c != -1) {
+			my $x = proc_rec($l, $c, $cnt);
+			if ($x < $cnt) {
+			    $flag = 0;
+			} else {
+			    $cnt = $x;
+			}
+		    } else {
+			$flag = 0;
+		    }
+		} while ($flag);
+	    }
+	}
+	close $file;
+    }
+}
+
+sub proc_rec(){
+    my $l = shift;
+    my $b = shift;
+    my $oldrank = shift;
+    my $c = index($l, "</tr>", $b);
+    my $a = rindex($l, "<tr>", $b);
+    my $chunk = substr($l, $a, $c-$a);
+    my @nums = ($chunk =~ />([0-9,]+)</g);
+    my ($rank, $score) = ($nums[0], $nums[1]);    
+    my $ks = "";
+    my $user = "";
+    my $date = "";
+    my $name = "";
+    $chunk =~ /\>(Y)<(?{$ks = $^N})/;
+    $chunk =~ /tv\/(\w+)(?{$user = $^N})"/;
+    $chunk =~ /\>(\d+\-\d+\-\d+)<(?{$date = $^N})/;
+    if (!$rank) {
+	return 0;
+    }
+    unless ($date) {
+	$date = 1997;
+    }
+    # full name
+    if (!$user) {
+	my $pre = index($chunk, $nums[1]);
+	if ($ks) {
+	    $pre = index($chunk, ">Y<") + 3;
+	}
+	my $post = index($chunk, $date);
+	my $piece = substr $chunk, $pre, $post - $pre;
+	$piece =~ />([éã\-\&\"\;\w\.,\ ]+)(?{$name = $^N})</;
+    } else {
+	$b = index($chunk, $user);
+	my $ind = index($chunk, ">", $b) + 1;
+	my $end = index($chunk, "<", $b);
+	$name = substr $chunk, $ind, $end - $ind;
+    }
+    $name =~ s/&quot;/"/g;
+    say "$rank $score $ks $name $date $user"
+	unless ($oldrank > $rank);
+    return $rank;
+}
+
+# ??? Names that this regex will miss:
+# "jbeanne05"
+# "giro-X"
+# ":::Redsun:::" # can search for red, but : is not allowed
+# "nibbler 69@AIVA"
+# "S.BAZ"   # works if you search for Z, or S
+# "TheActivisionary"  # works if you search for act or the
+# "nii-san"
+# "wolfman0024"
+# "AGODZILLA@AIVA"
