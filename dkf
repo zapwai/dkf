@@ -13,6 +13,14 @@
 
 use feature 'say';
 
+for my $h ("dkfjr.html", "dkf.html") {
+    if (-e $h) {
+	my $last_mod_time = (stat ($h))[9];
+	my $diff = time - $last_mod_time;
+	unlink $h if ($diff > 7*24*60*60);
+    }
+}
+
 my $jrflag = 0;
 if ( ($ARGV[0] eq "-jr") || ($ARGV[1] eq "-jr") ) {
     $jrflag++;
