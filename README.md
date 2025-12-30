@@ -75,3 +75,30 @@ Use the -jr flag to use the Donkey Kong Jr. list instead.
 2 1,555,500 Y Phil Tudose 2021-12-18 tudose
 120 87,300  Phil Chapman 2005-02-08 
 ```
+
+--------
+
+Update 12/30/25
+
+The forum now has protections which soft-block CLI tools (e.g. curl).
+But in order for my script to work, it needs a copy of dkf.html or dkfjr.html (the top scores lists).
+
+The simplest fix is for you, the user, to download it with your browser, and then save the html file to the dkf folder.
+
+dkf.html : https://donkeykongforum.net/index.php?topic=366.0
+
+dkfjr.html : https://donkeykongforum.net/index.php?topic=373.0
+
+
+If you don't want to do that, here is another option using node.js
+
+In a terminal, enter the dkf directory. Use the following commands.
+```npm init -y
+npm install playwright
+npx playwright install
+node fetch.js > dkf.html
+node fetchjr.js > dkfjr.html
+```
+
+After a browser window opens, there will be a delay before it closes on its own and downloads the HTML file.
+Our dkf script will then function normally.
