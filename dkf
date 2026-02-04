@@ -17,7 +17,7 @@ for my $h ("dkfjr.html", "dkf.html") {
     if (-e $h) {
 	my $last_mod_time = (stat ($h))[9];
 	my $diff = time - $last_mod_time;
-	unlink $h if ($diff > 7*24*60*60);
+	unlink $h if ($diff > 365*7*24*60*60);
     }
 }
 
